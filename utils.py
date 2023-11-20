@@ -9,7 +9,7 @@ from variables import PRICES_RANGES_1, PRICES_RANGES_2
 
 
 def calc_price(x: float):
-    if not pd.isna(x):
+    if not pd.isna(x) and x > 0:
         x_rnd = math.floor(x * 10) / 10.0
         if x < PRICES_RANGES_1[0]:
             price = x - (x - x_rnd - 0.05) if round(x - x_rnd, 2) > 0.05 else x - (x - x_rnd + 0.01)
@@ -28,7 +28,7 @@ def calc_price(x: float):
 
 
 def calc_price2(x: float):
-    if not pd.isna(x):
+    if not pd.isna(x) and x > 0:
         x_rnd = math.floor(x * 10) / 10.0
         if x < PRICES_RANGES_2[0]:
             if round(x - x_rnd, 2) == 0.05:
@@ -40,7 +40,10 @@ def calc_price2(x: float):
             else:
                 price = x_rnd + 0.05
         elif PRICES_RANGES_2[1] - 0.01 > x >= PRICES_RANGES_2[0]:
-            price = math.ceil(x * 10) / 10 - 0.01
+            if math.ceil(x * 10) / 10 - x == 0:
+                price = x + 0.09
+            else:
+                price = math.ceil(x * 10) / 10 - 0.01
         elif PRICES_RANGES_2[2] - 0.01 > x >= PRICES_RANGES_2[1]:
             if round(x - math.floor(x), 2) in [0.49, 0.99]:
                 price = x + 0.5
@@ -63,6 +66,25 @@ def calc_price2(x: float):
         return 0
 
 
+def calc_superkomp_price(x: float):
+    if not pd.isna(x) and x > 0:
+        if x < PRICES_RANGES_2[0]:
+            price = calc_price2(x + 0.05)
+        elif PRICES_RANGES_2[2] - 0.01 > x >= PRICES_RANGES_2[0]:
+            price = calc_price2(x + 0.49)
+        elif PRICES_RANGES_2[3] - 0.01 > x >= PRICES_RANGES_2[2]:
+            price = calc_price2(x + 0.99)
+        elif x >= PRICES_RANGES_2[3]:
+            price = calc_price2(x + 1.99)
+        else:
+            price = 0
+
+        return price
+
+    else:
+        return 0
+
+
 def second_smallest(row):
     values = [value for value in row if pd.notna(value)]
     return sorted(values)[1] if len(values) > 1 else np.nan
@@ -76,3 +98,12 @@ def open_excel_file(file_name: str):
         excel_app.Workbooks.Open(file_path)
     except Exception as e:
         print(f"Error: {e}")
+
+
+def save_csv(df: pd.DataFrame):
+    df.to_csv('outputs/test.csv', index=False)
+
+
+def save_and_open_xlsx(df: pd.DataFrame):
+    df.to_excel('outputs/results.xlsx', index=False)
+    open_excel_file('results.xlsx')

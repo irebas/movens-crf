@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 
 from sqlite import SQLite
-from utils import calc_price, calc_price2, second_smallest, open_excel_file
-from variables import DB_NAME, INPUTS, MEDIANS, PERC_DIFF
+from utils import calc_price, calc_price2, calc_superkomp_price, second_smallest, save_and_open_xlsx
+from variables import DB_NAME, INPUTS, MEDIANS, PERC_DIFF, ZONES_PARAMS
 
 
 def insert_inputs():
@@ -14,7 +14,7 @@ def insert_inputs():
         SQLite(DB_NAME).create_table(df=df, table_name=file['file'].split('/')[1].replace('.xlsx', ''))
 
 
-def calculate() -> pd.DataFrame:
+def calc_final_price() -> pd.DataFrame:
     df = SQLite(DB_NAME).run_sql_query_from_file('queries/first_view.sql')
     df['min_price'] = df[MEDIANS].min(axis=1)
     df['min_price_2'] = df[MEDIANS].apply(second_smallest, axis=1)
@@ -34,8 +34,8 @@ def calculate() -> pd.DataFrame:
                 calc_method = 'Super Wizerunek'
             case 'Wizerunek':
                 if calc_price(min_price) < df.loc[r, 'CZ4B']:
-                    price = calc_price(df.loc[r, 'CZ4B'])
-                    calc_method = 'Wizerunek - cz4n_price'
+                    price = calc_price2(df.loc[r, 'CZ4B'])
+                    calc_method = 'Wizerunek - cz4b_price'
                 else:
                     price = calc_price(min_price)
                     calc_method = 'Wizerunek - min_price'
@@ -66,26 +66,75 @@ def calculate() -> pd.DataFrame:
                     price = calc_price2(price_to_calc)
                     calc_method = f'{final_role} - no median price'
             case _:
-                price = -1
+                price = 0
                 calc_method = 'Other role'
+        price = price if price > 0 else pd.NA
         df.loc[r, 'final_price'] = price
         df.loc[r, 'calc_method'] = calc_method
 
     return df
 
 
-def save_csv(df: pd.DataFrame):
-    df.to_csv('outputs/test.csv', index=False)
+def calc_price_zone_1(df: pd.DataFrame) -> pd.DataFrame:
+    df['final_price_idx'] = df['final_price'] / df['Indeks'] * 100
+    df['role_group'] = ['G1' if x in ['Super Wizerunek', 'Wizerunek'] else 'G2' for x in df['Final role']]
+    df['group_price_avg'] = df.groupby(['role_group', 'Synonim'])['final_price_idx'].transform('mean')
+    df['price_zone_1'] = df['group_price_avg'] * df['Indeks'] / 100
+    df['price_zone_1'] = [calc_price2(x) for x in df['price_zone_1']]
+    df['price_zone_1'] = np.where(pd.isna(df['Synonim']), df['final_price'], df['price_zone_1'])
+    df['price_zone_1'] = np.where((df['price_zone_1'] - df['CZ3B']) / df['price_zone_1'] >= 0,
+                                  df['price_zone_1'], df['final_price'])
+    return df
 
 
-def save_and_open_xlsx(df: pd.DataFrame):
-    df.to_excel('outputs/results.xlsx', index=False)
-    open_excel_file('results.xlsx')
+def calc_zones_prices(df: pd.DataFrame) -> pd.DataFrame:
+    price_zones = ['price_zone_2', 'price_zone_3', 'price_zone_4', 'price_zone_5']
+    df[price_zones] = pd.NA
+    for r in range(len(df)):
+        final_role = df.loc[r, 'Final role']
+        l1 = df.loc[r, 'L1_name']
+        price_zone_1 = df.loc[r, 'price_zone_1']
+        if final_role in ['Wizerunek', 'Gama', 'Kompensacja', 'Super Kompensacja']:
+            price_zone_2 = calc_price2(ZONES_PARAMS[final_role]['zone_2'][l1] * price_zone_1)
+            price_zone_3 = calc_price2(ZONES_PARAMS[final_role]['zone_3'][l1] * price_zone_1)
+            price_zone_4 = calc_price2(ZONES_PARAMS[final_role]['zone_4'][l1] * price_zone_1)
+            price_zone_5 = calc_price2(ZONES_PARAMS[final_role]['zone_5'][l1] * price_zone_1)
+        elif final_role == 'Super Wizerunek':
+            price_zone_2 = price_zone_1 if l1 in ['PDK', 'PFT', 'Bazar', 'Tekstylia'] else 0
+            if l1 in ['PDK', 'PFT']:
+                price_zone_3 = price_zone_1
+                price_zone_4 = price_zone_1
+                price_zone_5 = calc_superkomp_price(price_zone_1)
+            elif l1 in ['Bazar', 'Tekstylia']:
+                price_zone_3 = calc_superkomp_price(price_zone_1)
+                price_zone_4 = 0
+                price_zone_5 = 0
+            else:
+                price_zone_3 = 0
+                price_zone_4 = 0
+                price_zone_5 = 0
+        else:
+            price_zone_2 = 0
+            price_zone_3 = 0
+            price_zone_4 = 0
+            price_zone_5 = 0
+
+        df.loc[r, 'price_zone_2'] = price_zone_2
+        df.loc[r, 'price_zone_3'] = price_zone_3
+        df.loc[r, 'price_zone_4'] = price_zone_4
+        df.loc[r, 'price_zone_5'] = price_zone_5
+
+    return df
+
+
+def main():
+    df = calc_final_price()
+    df = calc_price_zone_1(df)
+    df = calc_zones_prices(df)
+    save_and_open_xlsx(df)
 
 
 if __name__ == '__main__':
     t0 = datetime.now()
-    df_results = calculate()
-    save_csv(df_results)
-    save_and_open_xlsx(df_results)
+    main()
     print(datetime.now() - t0)

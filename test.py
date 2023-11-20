@@ -1,13 +1,17 @@
 import pandas as pd
-import numpy as np
 
-d = [{'cc': 'USA', 'v1': 5, 'v2': None, 'v3': 3},
-     {'cc': 'USA', 'v1': 6, 'v2': 7, 'v3': 9},
-     {'cc': 'USA', 'v1': 5, 'v2': 11, 'v3': 3}]
+# Sample DataFrame
+data = {'field_1': ['A', 'A', 'B', 'B', 'A', 'B'],
+        'field_2': ['X', 'Y', 'X', 'Y', 'X', 'Y'],
+        'Final role': ['Wizerunek', 'Super Wizerunek', 'U2', 'U2', 'U3', 'Wizerunek'],
+        'column': [1, 2, 3, 4, 5, 6]}
+df = pd.DataFrame(data)
 
-df = pd.DataFrame(d)
+df['role_group'] = ['G1' if x in ['Super Wizerunek', 'Wizerunek'] else 'G2' for x in df['Final role']]
 
-medians = ['v1', 'v2', 'v3']
 
-df['min_price_2'] = df[medians].apply(lambda x: pd.Series(x).nsmallest(2).iloc[-1], axis=1)
+
+# Calculate the average for each combination of 'field_1' and 'field_2'
+df['avg_column'] = df.groupby(['field_1', 'field_2'])['column'].transform('mean')
+
 print(df)
