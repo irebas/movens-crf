@@ -7,6 +7,29 @@ SELECT
     i2.CZ4B,
     i2.Synonim,
     i2.Indeks,
+    i2."410" AS price_zone_410b,
+    i2."420" AS price_zone_420b,
+    i2."430" AS price_zone_430b,
+    i2."440" AS price_zone_440b,
+    i2."450" AS price_zone_450b,
+    i2."502" AS price_zone_502b,
+    i2."505" AS price_zone_505b,
+    i2."506" AS price_zone_506b,
+    i2."507" AS price_zone_507b,
+    i2."900" AS price_zone_900b,
+    i2."11" AS price_zone_11b,
+    i2."12" AS price_zone_12b,
+    i2."13" AS price_zone_13b,
+    i2."21" AS price_zone_21b,
+    i2."22" AS price_zone_22b,
+    i2."23" AS price_zone_23b,
+    i2."1" AS price_zone_1b,
+    i2."211" AS price_zone_211b,
+    i2."212" AS price_zone_212b,
+    i2."213" AS price_zone_213b,
+    i2."300" AS price_zone_300b,
+    i2."301" AS price_zone_301b,
+    i2."302" AS price_zone_302b,
     i2.med_auchan,
     i2.med_biedronka,
     i2.med_intermarche,
@@ -23,6 +46,4 @@ FROM input1 i1
 LEFT JOIN input2 i2 ON i1.IDProduktu = i2.ArticleID
 LEFT JOIN input3 i3 ON i1.L4_GROUP_SUB_ID = i3.L4
 WHERE i2.ArticleID IS NOT NULL AND i1."Final role" IS NOT NULL
--- AND (COALESCE(i2.med_auchan, 0) + COALESCE(i2.med_biedronka, 0) + COALESCE(i2.med_intermarche, 0) +
--- COALESCE(i2.med_kaufland, 0) + COALESCE(i2.med_leclerc, 0) + COALESCE(i2.med_lidl, 0) +
--- COALESCE(i2.med_netto, 0) + COALESCE(i2.med_rossmann, 0)) > 0
+AND i1."Final role" NOT IN ('Fixed Prices', 'In-out/ Seasonal', 'Out of project')

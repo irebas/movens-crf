@@ -5,7 +5,8 @@ import numpy as np
 import pandas as pd
 import win32com.client as win32
 
-from variables import PRICES_RANGES_1, PRICES_RANGES_2
+from variables import PRICES_RANGES_1, PRICES_RANGES_2, DB_NAME
+from sqlite import SQLite
 
 
 def calc_price(x: float):
@@ -13,9 +14,9 @@ def calc_price(x: float):
         x_rnd = math.floor(x * 10) / 10.0
         if x < PRICES_RANGES_1[0]:
             price = x - (x - x_rnd - 0.05) if round(x - x_rnd, 2) > 0.05 else x - (x - x_rnd + 0.01)
-        elif PRICES_RANGES_1[1] - 0.01 > x >= PRICES_RANGES_1[0]:
+        elif PRICES_RANGES_1[1] - 0.01 >= x >= PRICES_RANGES_1[0]:
             price = x_rnd - 0.01
-        elif PRICES_RANGES_1[2] - 0.01 > x >= PRICES_RANGES_1[1]:
+        elif PRICES_RANGES_1[2] - 0.01 >= x >= PRICES_RANGES_1[1]:
             price = math.floor(x) + 0.49 if round(x - math.floor(x), 2) > 0.5 else math.floor(x) - 0.01
         elif x >= PRICES_RANGES_1[2]:
             price = math.floor(x) - 0.01
@@ -39,17 +40,19 @@ def calc_price2(x: float):
                 price = math.ceil(x * 10) / 10 - 0.01
             else:
                 price = x_rnd + 0.05
-        elif PRICES_RANGES_2[1] - 0.01 > x >= PRICES_RANGES_2[0]:
-            if math.ceil(x * 10) / 10 - x == 0:
+        elif PRICES_RANGES_2[1] - 0.01 >= round(x, 2) >= PRICES_RANGES_2[0]:
+            if round(x - x_rnd, 2) == 0.09:
+                price = x + 0.1
+            elif math.ceil(x * 10) / 10 - x == 0:
                 price = x + 0.09
             else:
                 price = math.ceil(x * 10) / 10 - 0.01
-        elif PRICES_RANGES_2[2] - 0.01 > x >= PRICES_RANGES_2[1]:
+        elif PRICES_RANGES_2[2] - 0.01 >= round(x, 2) >= PRICES_RANGES_2[1]:
             if round(x - math.floor(x), 2) in [0.49, 0.99]:
                 price = x + 0.5
             else:
                 price = math.ceil(x) - 0.01 if round(x - math.floor(x), 2) > 0.5 else math.floor(x) + 0.49
-        elif PRICES_RANGES_2[3] - 0.01 > x >= PRICES_RANGES_2[2]:
+        elif PRICES_RANGES_2[3] - 0.01 >= round(x, 2) >= PRICES_RANGES_2[2]:
             price = math.ceil(x) - 0.01
         elif x >= PRICES_RANGES_2[3]:
             if 10 * round((x - math.floor(x / 10) * 10), 2) in [49.9, 99.9]:
@@ -105,5 +108,12 @@ def save_csv(df: pd.DataFrame):
 
 
 def save_and_open_xlsx(df: pd.DataFrame):
+    print('Saving and opening file, please wait...')
     df.to_excel('outputs/results.xlsx', index=False)
     open_excel_file('results.xlsx')
+
+
+def convert_json_to_csv():
+    file_in = 'inputs/table3.json'
+    df = pd.read_json(path_or_buf=file_in, lines=True)
+    SQLite(DB_NAME).create_table(df=df, table_name='table3')
