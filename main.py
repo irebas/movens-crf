@@ -136,16 +136,15 @@ def calc_plxb_prices(df: pd.DataFrame):
     df6 = pd.merge(left=df6[['IDProduktu_plxb', 'IDBrand', 'final_grid']],
                    right=df[['IDProduktu'] + [col for col in cols]],
                    how='left', left_on='IDBrand', right_on='IDProduktu')
-    # for col in cols:
-    #     df6[f'{col}_plxb'] = df6[col] * df6['final_grid']
-    #     df6[f'{col}_plxb'] = [calc_price2(x) for x in df6[f'{col}_plxb']]
-    df6 = df6.assign(**{f'{col}_plxb': df6[col] * df6['final_grid'] for col in cols})
-    df6[cols] = df6[cols].apply(lambda x: x.map(calc_price2))
+    for col in cols:
+        df6[f'{col}_plxb'] = df6[col] * df6['final_grid']
+        df6[f'{col}_plxb'] = [calc_price2(x) for x in df6[f'{col}_plxb']]
     df = pd.merge(left=df, right=df6[['IDProduktu_plxb'] + [f'{col}_plxb' for col in cols]], how='left',
                   left_on='IDProduktu', right_on='IDProduktu_plxb')
     for col in cols:
         df[col] = np.where(df['Final role'] == 'PLxB', df[f'{col}_plxb'], df[col])
     df = df[[col for col in df.columns if '_plxb' not in col]]
+    df['has_price_zone_1a'] = ['No' if pd.isna(x) else 'Yes' for x in df['price_zone_1a']]
 
     print('price_zones for plxb calculated')
     return df
@@ -166,6 +165,10 @@ def calc_model_zones(df: pd.DataFrame, zones: list, v: str) -> pd.DataFrame:
     df[f'margin_all_zones_{v}'] = 0
     for zone in zones:
         df[f'margin_all_zones_{v}'] = df[f'margin_all_zones_{v}'] + df[f'margin_zone_{zone}{v}'].fillna(0)
+    m_types = ['vol', 'sales', 'margin']
+    all_cols = [f'{x}_zone_{y}{v}' for x in m_types for y in zones] + [f'{x}_all_zones_{v}' for x in m_types]
+    for col in all_cols:
+        df[col] = np.where(df['has_price_zone_1a'] == 'Yes', df[col], np.nan)
 
     print(f'Model calculated for version {v}')
     return df
