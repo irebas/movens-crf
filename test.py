@@ -1,2 +1,3 @@
-x = lambda x: x + 1
-print(x(2))
+from datetime import datetime
+
+print(datetime.now().strftime('%Y%m%d%H%M'))

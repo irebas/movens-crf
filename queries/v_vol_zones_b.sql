@@ -1,3 +1,4 @@
+DROP VIEW vol_zones_b;
 CREATE VIEW vol_zones_b AS
 WITH t0 AS (
 	SELECT
@@ -18,7 +19,7 @@ t1 AS (
 		i5.price_zone
 	FROM table3 t LEFT JOIN t0 ON t.ID_Produktu = t0.IDProduktu
 	LEFT JOIN input5b i5 ON t.ID_Sklepu = i5.shop_id AND t0.L2_DEPARTMENT_ID = i5.dept
-	WHERE t.ID_Sklepu IN (SELECT shop_id FROM input5b) AND
+	WHERE t.ID_Sklepu IN (SELECT shop_id FROM input5a) AND
 	t.ID_Produktu IN (SELECT IDProduktu FROM t0)
 )
 

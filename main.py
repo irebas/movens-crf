@@ -4,14 +4,16 @@ import numpy as np
 import pandas as pd
 
 from sqlite import SQLite
-from utils import calc_price, calc_price2, calc_superkomp_price, second_smallest, save_and_open_xlsx
+from utils import calc_price, calc_price2, calc_superkomp_price, second_smallest, open_excel_file
 from variables import DB_NAME, INPUTS, MEDIANS, PERC_DIFF, ZONES_PARAMS, ZONES_A, ZONES_B
 
 
 def insert_inputs():
+    t0 = datetime.now()
     for file in INPUTS:
         df = pd.read_excel(file['file'], skiprows=file['skiprows'])
         SQLite(DB_NAME).create_table(df=df, table_name=file['file'].split('/')[1].replace('.xlsx', ''))
+    print(f'Input tables created in: {datetime.now() - t0}')
 
 
 def calc_final_price() -> pd.DataFrame:
@@ -130,7 +132,7 @@ def calc_zones_prices(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def calc_plxb_prices(df: pd.DataFrame):
+def calc_plxb_prices(df: pd.DataFrame) -> pd.DataFrame:
     cols = ['price_zone_1a', 'price_zone_2a', 'price_zone_3a', 'price_zone_4a', 'price_zone_5a']
     df6 = SQLite(DB_NAME).run_sql_query('SELECT * FROM input6')
     df6 = pd.merge(left=df6[['IDProduktu_plxb', 'IDBrand', 'final_grid']],
@@ -174,7 +176,7 @@ def calc_model_zones(df: pd.DataFrame, zones: list, v: str) -> pd.DataFrame:
     return df
 
 
-def main():
+def calc_model() -> pd.DataFrame:
     t0 = datetime.now()
     df = calc_final_price()
     df = calc_price_zone_1(df)
@@ -182,10 +184,25 @@ def main():
     df = calc_plxb_prices(df)
     df = calc_model_zones(df, zones=ZONES_A, v='a')
     df = calc_model_zones(df, zones=ZONES_B, v='b')
-    print(f'Model calculated in : {datetime.now() - t0}')
-    save_and_open_xlsx(df)
-    print(f'Done in: {datetime.now() - t0}')
+    print(f'All model calculated in : {datetime.now() - t0}')
+
+    return df
+
+
+def save_and_open_xlsx():
+    df = calc_model()
+    print('Saving and opening file, please wait...')
+    file_name = f"results_{datetime.now().strftime('%Y%m%d%H%M')}.xlsx"
+    df.to_excel(f'outputs/{file_name}', index=False)
+    open_excel_file(file_name)
+
+
+def save_model_as_csv():
+    df = calc_model()
+    file_name = f"outputs/results_{datetime.now().strftime('%Y%m%d%H%M')}.csv"
+    df.to_csv(file_name, encoding='utf-8-sig')
+    print(f'File saved')
 
 
 if __name__ == '__main__':
-    main()
+    save_and_open_xlsx()

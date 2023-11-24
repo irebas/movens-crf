@@ -103,16 +103,6 @@ def open_excel_file(file_name: str):
         print(f"Error: {e}")
 
 
-def save_csv(df: pd.DataFrame):
-    df.to_csv('outputs/test.csv', index=False)
-
-
-def save_and_open_xlsx(df: pd.DataFrame):
-    print('Saving and opening file, please wait...')
-    df.to_excel('outputs/results.xlsx', index=False)
-    open_excel_file('results.xlsx')
-
-
 def convert_json_to_csv():
     file_in = 'inputs/table3.json'
     df = pd.read_json(path_or_buf=file_in, lines=True)
