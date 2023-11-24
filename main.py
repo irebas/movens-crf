@@ -5,14 +5,19 @@ import pandas as pd
 
 from sqlite import SQLite
 from utils import calc_price, calc_price2, calc_superkomp_price, second_smallest, open_excel_file
-from variables import DB_NAME, INPUTS, MEDIANS, PERC_DIFF, ZONES_PARAMS, ZONES_A, ZONES_B
+from variables import DB_NAME, MEDIANS, PERC_DIFF, KOMP_COEFF, SUPER_KOMP_COEFF, ZONES_PARAMS, ZONES_A, ZONES_B
 
 
-def insert_inputs():
+def insert_inputs(input_id: str):
     t0 = datetime.now()
-    for file in INPUTS:
-        df = pd.read_excel(file['file'], skiprows=file['skiprows'])
-        SQLite(DB_NAME).create_table(df=df, table_name=file['file'].split('/')[1].replace('.xlsx', ''))
+    inputs_list = ['1', '2', '3', '5a', '5b', '6']
+    if input_id in inputs_list:
+        df = pd.read_excel(f'inputs/input{input_id}.xlsx')
+        SQLite(DB_NAME).create_table(df=df, table_name=f'input{input_id}')
+    else:
+        for input_id in inputs_list:
+            df = pd.read_excel(f'inputs/input{input_id}.xlsx')
+            SQLite(DB_NAME).create_table(df=df, table_name=f'input{input_id}')
     print(f'Input tables created in: {datetime.now() - t0}')
 
 
@@ -55,9 +60,9 @@ def calc_final_price() -> pd.DataFrame:
                     if final_role == 'Gama':
                         price_gross = calc_price2(df.loc[r, 'avg_price'])
                     elif final_role == 'Kompensacja':
-                        price_gross = calc_price2(df.loc[r, 'median_price'] * 1.01)
+                        price_gross = calc_price2(df.loc[r, 'median_price'] * KOMP_COEFF)
                     elif final_role == 'Super Kompensacja':
-                        price_gross = calc_price2(df.loc[r, 'median_price'] * 1.03)
+                        price_gross = calc_price2(df.loc[r, 'median_price'] * SUPER_KOMP_COEFF)
                     else:
                         price_gross = 0
                     df.loc[r, 'price_gross'] = price_gross

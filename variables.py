@@ -1,11 +1,5 @@
 # INPUTS NON EDITABLE !!!
 DB_NAME = 'carrefour.db'
-INPUTS = [{'file': 'inputs/input1.xlsx', 'skiprows': 0},
-          {'file': 'inputs/input2.xlsx', 'skiprows': 5},
-          {'file': 'inputs/input3.xlsx', 'skiprows': 0},
-          {'file': 'inputs/input5a.xlsx', 'skiprows': 0},
-          {'file': 'inputs/input5b.xlsx', 'skiprows': 0},
-          {'file': 'inputs/input6.xlsx', 'skiprows': 0},]
 
 MEDIANS = ['med_auchan', 'med_biedronka', 'med_intermarche', 'med_kaufland', 'med_leclerc', 'med_lidl', 'med_netto',
            'med_rossmann']
@@ -18,6 +12,9 @@ ZONES_B = ['410', '420', '430', '440', '450', '502', '505', '506', '507', '900',
 PERC_DIFF = 0.1
 PRICES_RANGES_1 = [15, 50, 100]
 PRICES_RANGES_2 = [10, 50, 100, 500]
+
+KOMP_COEFF = 1.01
+SUPER_KOMP_COEFF = 1.03
 
 ZONES_PARAMS = {
     'Wizerunek': {
