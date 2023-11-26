@@ -42,3 +42,10 @@ ZONES_PARAMS = {
         'zone_5': {'PDK': 1.08, 'PFT': 1.08, 'BAZAR': 1.08, 'TEKSTYLIA': 1.08, 'EPCS': 1.08}
     }
 }
+
+ELAST = [{'final_role': 'Super Wizerunek', 'elast_increase': -2.5, 'elast_decrease': -3},
+         {'final_role': 'Wizerunek', 'elast_increase': -2, 'elast_decrease': -2.5},
+         {'final_role': 'Gama', 'elast_increase': -1, 'elast_decrease': -1},
+         {'final_role': 'Kompensacja', 'elast_increase': -0.5, 'elast_decrease': -0.5},
+         {'final_role': 'Super Kompensacja', 'elast_increase': -0.25, 'elast_decrease': -0.25},
+         {'final_role': 'PLxB', 'elast_increase': -0.25, 'elast_decrease': -0.25}]

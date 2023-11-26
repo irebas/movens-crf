@@ -128,10 +128,10 @@ def calc_zones_prices(df: pd.DataFrame) -> pd.DataFrame:
             price_zone_4 = 0
             price_zone_5 = 0
 
-        df.loc[r, 'price_zone_2a'] = price_zone_2
-        df.loc[r, 'price_zone_3a'] = price_zone_3
-        df.loc[r, 'price_zone_4a'] = price_zone_4
-        df.loc[r, 'price_zone_5a'] = price_zone_5
+        df.loc[r, 'price_zone_2a'] = float(price_zone_2)
+        df.loc[r, 'price_zone_3a'] = float(price_zone_3)
+        df.loc[r, 'price_zone_4a'] = float(price_zone_4)
+        df.loc[r, 'price_zone_5a'] = float(price_zone_5)
 
     print('price_zones calculated')
     return df
@@ -210,4 +210,5 @@ def save_model_as_csv():
 
 
 if __name__ == '__main__':
-    save_and_open_xlsx()
+    SQLite(DB_NAME).create_table(df=calc_model(), table_name='results')
+    # save_and_open_xlsx()
