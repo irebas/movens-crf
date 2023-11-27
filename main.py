@@ -189,6 +189,7 @@ def calc_model() -> pd.DataFrame:
     df = calc_plxb_prices(df)
     df = calc_model_zones(df, zones=ZONES_A, v='a')
     df = calc_model_zones(df, zones=ZONES_B, v='b')
+    SQLite(DB_NAME).create_table(df=df, table_name='results')
     print(f'All model calculated in : {datetime.now() - t0}')
 
     return df
@@ -210,6 +211,7 @@ def save_model_as_csv():
 
 
 if __name__ == '__main__':
+    pass
     # SQLite(DB_NAME).create_table(df=calc_model(), table_name='results')
-    save_and_open_xlsx()
+    # save_and_open_xlsx()
     # save_model_as_csv()

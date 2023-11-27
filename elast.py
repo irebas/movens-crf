@@ -1,4 +1,5 @@
 import warnings
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -8,13 +9,15 @@ from utils import DB_NAME
 from variables import ELAST, ZONES_A, ZONES_B
 
 
-def generate_elasticity():
+def calc_elasticity():
+    t0 = datetime.now()
     # step 1 - pobranie tabel z bazy danych - results, elast_vol i parametrów elastycznosci z variables test_id =1422281
     df = SQLite(DB_NAME).run_sql_query('SELECT * FROM results')
-    df_elast_vol = SQLite(DB_NAME).run_sql_query('SELECT * FROM elast_vol')
-    df_elast = pd.DataFrame(data=ELAST)
     df.rename(columns={'IDProduktu': 'product_id', 'L1_SECTOR_ID': 'L1', 'L2_DEPARTMENT_ID': 'L2',
                        'Final role': 'final_role'}, inplace=True)
+    df_results = df.copy()
+    df_elast_vol = SQLite(DB_NAME).run_sql_query('SELECT * FROM elast_vol')
+    df_elast = pd.DataFrame(data=ELAST)
     # step 2 - stworzenie wszystkich par zone A oraz zone B
     cols_x = [f'price_zone_{x}a' for x in ZONES_A]
     cols_y = [f'price_zone_{x}b' for x in ZONES_B]
@@ -42,12 +45,14 @@ def generate_elasticity():
     df_summary['zone_a'] = [f"price_zone_{x.split('_')[0]}" for x in df_summary['zones_pair']]
     df_summary = pd.merge(left=df_summary, right=df_prices, how='left', on=['product_id', 'zone_a'])
     df_summary['vol_elast'] = df_summary['volume'] * (df_summary['elasticity'] * df_summary['price_change'] + 1)
-    df_summary['sales'] = df_summary['vol_elast'] * df_summary['price_zone_a']
-    df_summary['margin'] = df_summary['vol_elast'] * (df_summary['price_zone_a'] - df_summary['CZ4B'])
+    df_summary['sales_elast'] = df_summary['vol_elast'] * df_summary['price_zone_a']
+    df_summary['margin_elast'] = df_summary['vol_elast'] * (df_summary['price_zone_a'] - df_summary['CZ4B'])
     df_summary_group = df_summary.groupby(['product_id']).agg({'volume': 'sum', 'vol_elast': 'sum',
-                                                               'sales': 'sum', 'margin': 'sum'}).reset_index()
+                                                               'sales_elast': 'sum', 'margin_elast': 'sum'}
+                                                              ).reset_index()
     df_final = pd.merge(left=df_base, right=df_summary_group, how='left', on='product_id')
-    SQLite(DB_NAME).create_table(df=df_final, table_name='elasticity')
-
-
-generate_elasticity()
+    df_results = pd.merge(left=df_results, right=df_final, how='left', on='product_id')
+    SQLite(DB_NAME).create_table(df=df_results, table_name='elasticity')
+    file_name = f"outputs/elast_{datetime.now().strftime('%Y%m%d%H%M')}.csv"
+    df.to_csv(file_name, encoding='utf-8-sig')
+    print(f'Elasticity calculated and saved as csv in {datetime.now() - t0}')

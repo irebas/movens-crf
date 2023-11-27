@@ -31,7 +31,7 @@ def work_log(params):
         df_tmp.rename(columns={'price_zone': 'zone_b'}, inplace=True)
         # df_tmp = df_tmp[~(df_tmp['zone_a'].isna() & df_tmp['zone_b'].isna())]
         df_tmp['zones_pair'] = [f'{str(int(x))}a_{str(int(y))}b' for x, y in zip(df_tmp['zone_a'], df_tmp['zone_b'])]
-        # a teraz sprawdźmy jaki wolumen danego produktu został sprzedany w danym sklepie
+        # sprawdzamy jaki wolumen danego produktu został sprzedany w danym sklepie i grupujemy po product_id, zones_pair
         df_tmp = pd.merge(left=df_tmp, right=df_t3_tmp, how='inner', on=['product_id', 'shop_id'])
         df_group = df_tmp.groupby(['product_id', 'zones_pair'])['volume'].sum().reset_index()
         df_tmp_all = pd.concat([df_tmp_all, df_group])
@@ -47,7 +47,7 @@ def pool_handler(params):
     return df_all
 
 
-def main():
+def calc_elast_vol():
     t0 = datetime.now()
     df_t3 = SQLite(DB_NAME).run_sql_query('SELECT ID_Sklepu AS shop_id, ID_Produktu AS product_id, volume FROM table3')
     df_5a = SQLite(DB_NAME).run_sql_query('SELECT shop_id, price_zone, dept AS L1 FROM input5a')
