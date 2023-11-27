@@ -151,7 +151,7 @@ def calc_plxb_prices(df: pd.DataFrame) -> pd.DataFrame:
     for col in cols:
         df[col] = np.where(df['Final role'] == 'PLxB', df[f'{col}_plxb'], df[col])
     df = df[[col for col in df.columns if '_plxb' not in col]]
-    df['has_price_zone_1a'] = ['No' if pd.isna(x) else 'Yes' for x in df['price_zone_1a']]
+    df['has_price_zone_1a'] = ['No' if pd.isna(x) or x == 0 else 'Yes' for x in df['price_zone_1a']]
 
     print('price_zones for plxb calculated')
     return df
@@ -210,5 +210,6 @@ def save_model_as_csv():
 
 
 if __name__ == '__main__':
-    SQLite(DB_NAME).create_table(df=calc_model(), table_name='results')
-    # save_and_open_xlsx()
+    # SQLite(DB_NAME).create_table(df=calc_model(), table_name='results')
+    save_and_open_xlsx()
+    # save_model_as_csv()
