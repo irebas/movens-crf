@@ -51,6 +51,7 @@ def calc_elasticity():
                                                                'sales_elast': 'sum', 'margin_elast': 'sum'}
                                                               ).reset_index()
     df_final = pd.merge(left=df_base, right=df_summary_group, how='left', on='product_id')
+    df_final = df_final[['product_id', 'volume', 'vol_elast', 'sales_elast', 'margin_elast']]
     df_results = pd.merge(left=df_results, right=df_final, how='left', on='product_id')
     SQLite(DB_NAME).create_table(df=df_results, table_name='elasticity')
     file_name = f"outputs/elast_{datetime.now().strftime('%Y%m%d%H%M')}.csv"
