@@ -118,7 +118,7 @@ def calc_zones_prices(df: pd.DataFrame) -> pd.DataFrame:
             price_zone_4 = calc_price2(ZONES_PARAMS[final_role]['zone_4'][l1] * price_zone_1)
             price_zone_5 = calc_price2(ZONES_PARAMS[final_role]['zone_5'][l1] * price_zone_1)
         elif final_role == 'Super Wizerunek':
-            price_zone_2 = price_zone_1 if l1 in ['PDK', 'PFT', 'Bazar', 'Tekstylia'] else 0
+            price_zone_2 = price_zone_1
             price_zone_3 = price_zone_1
             price_zone_4 = price_zone_1
             price_zone_5 = calc_superkomp_price(price_zone_1)
