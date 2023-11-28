@@ -55,5 +55,5 @@ def calc_elasticity():
     df_results = pd.merge(left=df_results, right=df_final, how='left', on='product_id')
     SQLite(DB_NAME).create_table(df=df_results, table_name='elasticity')
     file_name = f"outputs/elast_{datetime.now().strftime('%Y%m%d%H%M')}.csv"
-    df.to_csv(file_name, encoding='utf-8-sig')
+    df_results.to_csv(file_name, encoding='utf-8-sig', index=False)
     print(f'Elasticity calculated and saved as csv in {datetime.now() - t0}')
