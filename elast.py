@@ -16,6 +16,7 @@ def calc_elasticity():
     df.rename(columns={'IDProduktu': 'product_id', 'L1_SECTOR_ID': 'L1', 'L2_DEPARTMENT_ID': 'L2',
                        'Final role': 'final_role'}, inplace=True)
     df_results = df.copy()
+    df = df[df['has_price_zone_1a'] == 'Yes']
     df_elast_vol = SQLite(DB_NAME).run_sql_query('SELECT * FROM elast_vol')
     df_elast = pd.DataFrame(data=ELAST)
     # step 2 - stworzenie wszystkich par zone A oraz zone B
@@ -45,6 +46,7 @@ def calc_elasticity():
     df_summary['zone_a'] = [f"price_zone_{x.split('_')[0]}" for x in df_summary['zones_pair']]
     df_summary = pd.merge(left=df_summary, right=df_prices, how='left', on=['product_id', 'zone_a'])
     df_summary['vol_elast'] = df_summary['volume'] * (df_summary['elasticity'] * df_summary['price_change'] + 1)
+    df_summary['vol_elast'] = [max(0, x) for x in df_summary['vol_elast']]
     df_summary['sales_elast'] = df_summary['vol_elast'] * df_summary['price_zone_a']
     df_summary['margin_elast'] = df_summary['vol_elast'] * (df_summary['price_zone_a'] - df_summary['CZ4B'])
     df_summary_group = df_summary.groupby(['product_id']).agg({'volume': 'sum', 'vol_elast': 'sum',

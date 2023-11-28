@@ -174,8 +174,9 @@ def calc_model_zones(df: pd.DataFrame, zones: list, v: str) -> pd.DataFrame:
         df[f'margin_all_zones_{v}'] = df[f'margin_all_zones_{v}'] + df[f'margin_zone_{zone}{v}'].fillna(0)
     m_types = ['vol', 'sales', 'margin']
     all_cols = [f'{x}_zone_{y}{v}' for x in m_types for y in zones] + [f'{x}_all_zones_{v}' for x in m_types]
-    for col in all_cols:
-        df[col] = np.where(df['has_price_zone_1a'] == 'Yes', df[col], np.nan)
+    if v == 'a':
+        for col in all_cols:
+            df[col] = np.where(df['has_price_zone_1a'] == 'Yes', df[col], np.nan)
 
     print(f'Model calculated for version {v}')
     return df
