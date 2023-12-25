@@ -34,7 +34,7 @@ def calc_final_price() -> pd.DataFrame:
     df['price_gross'] = pd.NA
     for r in range(len(df)):
         min_price = df.loc[r, 'final_min_price']
-        final_role = df.loc[r, 'Final role']
+        final_role = df.loc[r, 'final_role']
         match final_role:
             case 'Super Wizerunek':
                 if not pd.isna(df.loc[r, 'min_price']):
@@ -93,7 +93,7 @@ def calc_final_price() -> pd.DataFrame:
 
 def calc_price_zone_1(df: pd.DataFrame) -> pd.DataFrame:
     df['final_price_idx'] = df['final_price'] / df['Indeks'] * 100
-    df['role_group'] = ['G1' if x in ['Super Wizerunek', 'Wizerunek'] else 'G2' for x in df['Final role']]
+    df['role_group'] = ['G1' if x in ['Super Wizerunek', 'Wizerunek'] else 'G2' for x in df['final_role']]
     df['group_price_avg'] = df.groupby(['role_group', 'Synonim'])['final_price_idx'].transform('mean')
     df['price_zone_1a'] = df['group_price_avg'] * df['Indeks'] / 100
     df['price_zone_1a'] = [calc_price2(x) for x in df['price_zone_1a']]
@@ -109,7 +109,7 @@ def calc_zones_prices(df: pd.DataFrame) -> pd.DataFrame:
     price_zones = ['price_zone_2a', 'price_zone_3a', 'price_zone_4a', 'price_zone_5a']
     df[price_zones] = pd.NA
     for r in range(len(df)):
-        final_role = df.loc[r, 'Final role']
+        final_role = df.loc[r, 'final_role']
         l1 = df.loc[r, 'L1_name']
         price_zone_1 = df.loc[r, 'price_zone_1a']
         if final_role in ['Wizerunek', 'Gama', 'Kompensacja', 'Super Kompensacja']:
@@ -141,15 +141,15 @@ def calc_plxb_prices(df: pd.DataFrame) -> pd.DataFrame:
     cols = ['price_zone_1a', 'price_zone_2a', 'price_zone_3a', 'price_zone_4a', 'price_zone_5a']
     df6 = SQLite(DB_NAME).run_sql_query('SELECT * FROM input6')
     df6 = pd.merge(left=df6[['IDProduktu_plxb', 'IDBrand', 'final_grid']],
-                   right=df[['IDProduktu'] + [col for col in cols]],
-                   how='left', left_on='IDBrand', right_on='IDProduktu')
+                   right=df[['product_id'] + [col for col in cols]],
+                   how='left', left_on='IDBrand', right_on='product_id')
     for col in cols:
         df6[f'{col}_plxb'] = df6[col] * df6['final_grid']
         df6[f'{col}_plxb'] = [calc_price2(x) for x in df6[f'{col}_plxb']]
     df = pd.merge(left=df, right=df6[['IDProduktu_plxb'] + [f'{col}_plxb' for col in cols]], how='left',
-                  left_on='IDProduktu', right_on='IDProduktu_plxb')
+                  left_on='product_id', right_on='IDProduktu_plxb')
     for col in cols:
-        df[col] = np.where(df['Final role'] == 'PLxB', df[f'{col}_plxb'], df[col])
+        df[col] = np.where(df['final_role'] == 'PLxB', df[f'{col}_plxb'], df[col])
     df = df[[col for col in df.columns if '_plxb' not in col]]
     df['has_price_zone_1a'] = ['No' if pd.isna(x) or x == 0 else 'Yes' for x in df['price_zone_1a']]
 
@@ -160,7 +160,7 @@ def calc_plxb_prices(df: pd.DataFrame) -> pd.DataFrame:
 def calc_model_zones(df: pd.DataFrame, zones: list, v: str) -> pd.DataFrame:
     table_name = f'vol_zones_{v}'
     df_vol_zones = SQLite(DB_NAME).run_sql_query(f"""SELECT * FROM {table_name}""")
-    df = pd.merge(left=df, right=df_vol_zones, how='left', on='IDProduktu')
+    df = pd.merge(left=df, right=df_vol_zones, how='left', on='product_id')
     df[f'vol_all_zones_{v}'] = 0
     for zone in zones:
         df[f'vol_all_zones_{v}'] = df[f'vol_all_zones_{v}'] + df[f'vol_zone_{zone}{v}'].fillna(0)
@@ -212,8 +212,7 @@ def save_model_as_csv():
 
 
 if __name__ == '__main__':
-    insert_inputs('7')
-    # pass
+    pass
     # SQLite(DB_NAME).create_table(df=calc_model(), table_name='results')
     # save_and_open_xlsx()
     # save_model_as_csv()

@@ -2,13 +2,13 @@ DROP VIEW vol_zones_b;
 CREATE VIEW vol_zones_b AS
 WITH t0 AS (
 	SELECT
-		i1.IDProduktu,
+		i1.product_id,
 		i1.L1_name,
 		i1.L2_DEPARTMENT_ID
 	FROM input1 i1
-	LEFT JOIN input2 i2 ON i1.IDProduktu = i2.ArticleID
-	WHERE i2.ArticleID IS NOT NULL AND i1."Final role" IS NOT NULL
-	AND i1."Final role" NOT IN ('Fixed Prices', 'In-out/ Seasonal', 'Out of project')
+	LEFT JOIN input2 i2 ON i1.product_id = i2.ArticleID
+	WHERE i2.ArticleID IS NOT NULL AND i1.final_role IS NOT NULL
+	AND i1.final_role NOT IN ('Fixed Prices', 'In-out/ Seasonal', 'Out of project')
 ),
 
 t1 AS (
@@ -17,14 +17,14 @@ t1 AS (
 		t0.L1_name,
 		t0.L2_DEPARTMENT_ID AS L2,
 		i5.price_zone
-	FROM table3 t LEFT JOIN t0 ON t.ID_Produktu = t0.IDProduktu
+	FROM table3 t LEFT JOIN t0 ON t.ID_Produktu = t0.product_id
 	LEFT JOIN input5b i5 ON t.ID_Sklepu = i5.shop_id AND t0.L2_DEPARTMENT_ID = i5.dept
 	WHERE t.ID_Sklepu IN (SELECT shop_id FROM input5a) AND
-	t.ID_Produktu IN (SELECT IDProduktu FROM t0)
+	t.ID_Produktu IN (SELECT product_id FROM t0)
 )
 
 SELECT
-	ID_Produktu AS IDProduktu,
+	ID_Produktu AS product_id,
 	SUM(IIF(price_zone=410,volume,0)) AS vol_zone_410b,
 	SUM(IIF(price_zone=420,volume,0)) AS vol_zone_420b,
 	SUM(IIF(price_zone=430,volume,0)) AS vol_zone_430b,

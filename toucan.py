@@ -3,7 +3,7 @@ import pandas as pd
 from utils import calc_ntile
 
 SQLITE = SQLite('carrefour.db')
-PRODUCTS_NB = 4
+PRODUCTS_NB = 50
 FACTOR_SUPER_W = 5
 FACTOR_W = 10
 
@@ -35,7 +35,7 @@ def assign_points() -> pd.DataFrame:
     return df
 
 
-def get_role(row):
+def assign_single_role(row):
     ranges = d_roles[row['category_role']]
     ratio = row['ratio']
     if ratio <= ranges[0]:
@@ -49,7 +49,13 @@ def get_role(row):
     else:
         role = 'Super Kompensacja'
 
-    if role == 'Super Wizerunek' and row['avg_product_value'] < FACTOR_SUPER_W:
+    if row['typology'] == 'PLxB':
+        role = 'PLxB'
+    elif row['typology'] in ['PLxOPP', 'NP']:
+        role = 'Super Wizerunek'
+    elif row['typology'] in ['Fixed Prices', 'In-out/ Seasonal', 'Out of project']:
+        role = row['typology']
+    elif role == 'Super Wizerunek' and row['avg_product_value'] < FACTOR_SUPER_W:
         role = 'Wizerunek'
     elif role == 'Wizerunek' and row['avg_product_value'] < FACTOR_W:
         role = 'Gama'
@@ -68,7 +74,7 @@ def calc_lev_roles(lev: str, products_excl: list, df: pd.DataFrame):
     df['rn'] = df.groupby(lev)['total_score'].rank(method='first', ascending=False)
     df['ratio'] = df['rn'] / df['items_nb']
     df['agg_level'] = lev
-    df['role'] = df.apply(func=get_role, axis=1)
+    df['final_role'] = df.apply(func=assign_single_role, axis=1)
     products_assigned = df['product_id'].tolist()
 
     return df, products_assigned
@@ -89,8 +95,8 @@ def get_final_df(df: pd.DataFrame) -> pd.DataFrame:
 def get_base_input():
     df = assign_points()
     df_final = get_final_df(df)
-    df_final.to_csv('df_final.csv', sep=';', encoding='utf-8-sig')
-    SQLITE.create_table(df=df_final, table_name='base_input')
+    df_final.to_csv('df_final.csv', sep=';', encoding='utf-8-sig', index=False)
+    SQLITE.create_table(df=df_final, table_name='input1')
 
 
 get_base_input()

@@ -1,5 +1,16 @@
 SELECT
-    i1.*,
+    i1.product_id,
+    i1.product_name,
+    i1.L1_SECTOR_ID,
+    i1.L1_name,
+    i1.L2_DEPARTMENT_ID,
+    i1.L2_name,
+    i1.L3_GROUP_ID,
+    i1.L3_name,
+    i1.L4_GROUP_SUB_ID,
+    i1.L4_name,
+    i1.category_role,
+    i1.final_role,
     i2.VAT,
     i2.CZ3N,
     i2.CZ3B,
@@ -43,7 +54,7 @@ SELECT
     i3.margin_komp,
     i3.margin_super_komp
 FROM input1 i1
-LEFT JOIN input2 i2 ON i1.IDProduktu = i2.ArticleID
+LEFT JOIN input2 i2 ON i1.product_id = i2.ArticleID
 LEFT JOIN input3 i3 ON i1.L4_GROUP_SUB_ID = i3.L4
-WHERE i2.ArticleID IS NOT NULL AND i1."Final role" IS NOT NULL
-AND i1."Final role" NOT IN ('Fixed Prices', 'In-out/ Seasonal', 'Out of project')
+WHERE i2.ArticleID IS NOT NULL AND i1.final_role IS NOT NULL
+AND i1.final_role NOT IN ('Fixed Prices', 'In-out/ Seasonal', 'Out of project')
