@@ -10,7 +10,7 @@ from variables import DB_NAME, MEDIANS, PERC_DIFF, KOMP_COEFF, SUPER_KOMP_COEFF,
 
 def insert_inputs(input_id: str):
     t0 = datetime.now()
-    inputs_list = ['1', '2', '3', '5a', '5b', '6']
+    inputs_list = ['1', '2', '3', '5a', '5b', '6', '7', '8', '9', '10']
     if input_id in inputs_list:
         df = pd.read_excel(f'inputs/input{input_id}.xlsx')
         SQLite(DB_NAME).create_table(df=df, table_name=f'input{input_id}')
@@ -212,7 +212,8 @@ def save_model_as_csv():
 
 
 if __name__ == '__main__':
-    pass
+    insert_inputs('7')
+    # pass
     # SQLite(DB_NAME).create_table(df=calc_model(), table_name='results')
     # save_and_open_xlsx()
     # save_model_as_csv()
