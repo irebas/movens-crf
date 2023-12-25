@@ -123,3 +123,8 @@ def divide_into_parts(x: int, n: int):
         start = end
 
     return result
+
+
+def calc_ntile(df_group, col: str):
+    df_group[f'{col}_score'] = pd.qcut(df_group[col], q=[0, 0.2, 0.4, 0.6, 0.8, 1], labels=False, duplicates='drop')
+    return df_group
