@@ -53,8 +53,8 @@ SELECT
     i3.margin_gama,
     i3.margin_komp,
     i3.margin_super_komp
-FROM input1 i1
+FROM input_base i1
 LEFT JOIN input2 i2 ON i1.product_id = i2.ArticleID
-LEFT JOIN input3 i3 ON i1.L4_GROUP_SUB_ID = i3.L4
+LEFT JOIN input_margin i3 ON i1.L4_GROUP_SUB_ID = i3.L4
 WHERE i2.ArticleID IS NOT NULL AND i1.final_role IS NOT NULL
 AND i1.final_role NOT IN ('Fixed Prices', 'In-out/ Seasonal', 'Out of project')

@@ -1,7 +1,0 @@
-1. Przełożenie tukana i dziobaka na kod Pythonowy
-a) shopping freq score co tam sie stało
-b) pokazać kolumne z pierwotną rolą
-c) dodać wagi dla wszystkich parametrów
-
-2. Zmiana input1 -> teraz ma się brać z pkt. 1
-3. Podpięcie gsheeta do sterowania

@@ -49,3 +49,16 @@ ELAST = [{'final_role': 'Super Wizerunek', 'elast_increase': -2.5, 'elast_decrea
          {'final_role': 'Kompensacja', 'elast_increase': -0.5, 'elast_decrease': -0.5},
          {'final_role': 'Super Kompensacja', 'elast_increase': -0.25, 'elast_decrease': -0.25},
          {'final_role': 'PLxB', 'elast_increase': -0.25, 'elast_decrease': -0.25}]
+
+FACTOR_SUPER_W = 5
+FACTOR_W = 10
+
+D_ROLES = {'Traffic': [0.025, 0.035, 0.54, 0.35, 0.05], 'Turnover': [0.02, 0.035, 0.535, 0.35, 0.06],
+           'Basket': [0.01, 0.03, 0.48, 0.40, 0.08], 'Margin': [0.005, 0.035, 0.425, 0.435, 0.1]}
+
+WAGES = {'sales_value_score': 1, 'unique_receipts_score': 1, 'avg_receipt_share_score': 1,
+         'shopping_frequency_score': 1, 'sales_margin_score': 1, 'nb_of_shops_with_sales_score': 1,
+         'promo_sales_share_score': 1, 'benchmark_list_score': 1, 'avg_product_value_score': 1}
+PRODUCTS_NB = 50
+
+PROJECT_ROOT = 'pric-labo.pricing_app.'

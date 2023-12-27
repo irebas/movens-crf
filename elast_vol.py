@@ -3,7 +3,7 @@ from multiprocessing import Pool
 
 import pandas as pd
 
-from sqlite import SQLite
+from utils.sqlite import SQLite
 from utils import divide_into_parts
 from variables import DB_NAME
 
@@ -52,7 +52,7 @@ def calc_elast_vol():
     df_t3 = SQLite(DB_NAME).run_sql_query('SELECT ID_Sklepu AS shop_id, ID_Produktu AS product_id, volume FROM table3')
     df_5a = SQLite(DB_NAME).run_sql_query('SELECT shop_id, price_zone, dept AS L1 FROM input5a')
     df_5b = SQLite(DB_NAME).run_sql_query('SELECT shop_id, price_zone, dept AS L2 FROM input5b')
-    df_base = SQLite(DB_NAME).run_sql_query_from_file('queries/elast_base.sql')
+    df_base = SQLite(DB_NAME).run_sql_query_from_file('queries/queries_sqlite/elast_base.sql')
     shops_5a = df_5a['shop_id'].unique().tolist()
     ranges = divide_into_parts(x=len(df_base), n=20)
     params = tuple([{'ranges': x, 'df_t3': df_t3, 'df_5a': df_5a, 'df_5b': df_5b,

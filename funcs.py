@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 import win32com.client as win32
 
-from variables import PRICES_RANGES_1, PRICES_RANGES_2, DB_NAME
-from sqlite import SQLite
+from utils.sqlite import SQLite
+from variables import PRICES_RANGES_1, PRICES_RANGES_2, DB_NAME, FACTOR_SUPER_W, FACTOR_W, D_ROLES
 
 
 def calc_price(x: float):
@@ -128,3 +128,38 @@ def divide_into_parts(x: int, n: int):
 def calc_ntile(df_group, col: str):
     df_group[f'{col}_score'] = pd.qcut(df_group[col], q=[0, 0.2, 0.4, 0.6, 0.8, 1], labels=False, duplicates='drop')
     return df_group
+
+
+def assign_single_role(row):
+    ranges = D_ROLES[row['category_role']]
+    ratio = row['ratio']
+    if ratio <= ranges[0]:
+        role = 'Super Wizerunek'
+    elif ratio <= sum(ranges[:2]):
+        role = 'Wizerunek'
+    elif ratio <= sum(ranges[:3]):
+        role = 'Gama'
+    elif ratio <= sum(ranges[:4]):
+        role = 'Kompensacja'
+    else:
+        role = 'Super Kompensacja'
+
+    if row['typology'] == 'PLxB':
+        final_role = 'PLxB'
+    elif row['typology'] in ['PLxOPP', 'NP']:
+        final_role = 'Super Wizerunek'
+    elif row['typology'] in ['Fixed Prices', 'In-out/ Seasonal', 'Out of project']:
+        final_role = row['typology']
+    elif role == 'Super Wizerunek' and row['avg_product_value'] < FACTOR_SUPER_W:
+        final_role = 'Wizerunek'
+    elif role == 'Wizerunek' and row['avg_product_value'] < FACTOR_W:
+        final_role = 'Gama'
+    else:
+        final_role = role
+
+    return role, final_role
+
+#
+# df = pd.read_csv('test.csv', sep=';')
+# df = df.groupby('L1_SECTOR_ID', group_keys=False).apply(func=calc_ntile, col='sales_value')
+# print(df)

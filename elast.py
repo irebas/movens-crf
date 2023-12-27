@@ -4,7 +4,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
-from sqlite import SQLite
+from utils.sqlite import SQLite
 from utils import DB_NAME
 from variables import ELAST, ZONES_A, ZONES_B
 
