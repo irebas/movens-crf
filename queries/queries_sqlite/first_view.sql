@@ -41,20 +41,20 @@ SELECT
     i2."300" AS price_zone_300b,
     i2."301" AS price_zone_301b,
     i2."302" AS price_zone_302b,
-    i2.med_auchan,
-    i2.med_biedronka,
-    i2.med_intermarche,
-    i2.med_kaufland,
-    i2.med_leclerc,
-    i2.med_lidl,
-    i2.med_netto,
-    i2.med_rossmann,
+    i2."Median Auchan" AS med_auchan,
+    i2."Median Biedronka" AS med_biedronka,
+    i2."Median Intermarche" AS med_intermarche,
+    i2."Median Kaufland" AS med_kaufland,
+    i2."Median Leclerc" AS med_leclerc,
+    i2."Median Lidl" AS med_lidl,
+    i2."Median Netto" AS med_netto,
+    i2."Median Rossman" AS med_rossmann,
     i3.margin_min,
     i3.margin_gama,
     i3.margin_komp,
     i3.margin_super_komp
 FROM input_base i1
-LEFT JOIN input2 i2 ON i1.product_id = i2.ArticleID
+LEFT JOIN input_price_reports i2 ON i1.product_id = i2.product_id
 LEFT JOIN input_margin i3 ON i1.L4_GROUP_SUB_ID = i3.L4
-WHERE i2.ArticleID IS NOT NULL AND i1.final_role IS NOT NULL
+WHERE i2.product_id IS NOT NULL AND i1.final_role IS NOT NULL
 AND i1.final_role NOT IN ('Fixed Prices', 'In-out/ Seasonal', 'Out of project')
