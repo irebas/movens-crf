@@ -5,23 +5,34 @@ import pandas as pd
 
 from utils.sqlite import SQLite
 from funcs import calc_price, calc_price2, calc_superkomp_price, second_smallest
-from variables import DB_NAME, MEDIANS, PERC_DIFF, KOMP_COEFF, SUPER_KOMP_COEFF, ZONES_PARAMS, ZONES_A, ZONES_B
+from variables import DB_NAME, MEDIANS, PERC_DIFF, KOMP_COEFF, SUPER_KOMP_COEFF, ZONES_PARAMS, ZONES_A, ZONES_B, PROJECT_ROOT
 from utils.gcp import GoogleCloudStorage, BigQueryClient
 
+BQ = BigQueryClient()
+GCS = GoogleCloudStorage()
 
-class ModelModOne:
+
+class ModelResults:
 
     def __init__(self, src: str):
         self.src = src
         if self.src == 'SQLite':
             self.df = SQLite(DB_NAME).run_sql_query_from_file('queries/queries_sqlite/first_view.sql')
-            self.df6 = SQLite(DB_NAME).run_sql_query('SELECT * FROM input_final_grid')
-            self.df_vol_zones_a = SQLite(DB_NAME).run_sql_query('SELECT * FROM vol_zones_a')
-            self.df_vol_zones_b = SQLite(DB_NAME).run_sql_query('SELECT * FROM vol_zones_b')
+            self.df_fin_grid = SQLite(DB_NAME).run_sql_query('SELECT * FROM input_final_grid')
+            self.df_vol_zones_a = SQLite(DB_NAME).run_sql_query_from_file('queries/queries_sqlite/vol_zones_a.sql')
+            self.df_vol_zones_b = SQLite(DB_NAME).run_sql_query_from_file('queries/queries_sqlite/vol_zones_b.sql')
         elif self.src == 'GCP':
+            queries = ['first_view', 'final_grid', 'vol_zones_a', 'vol_zones_b']
+            queries_strings = list()
+            for query_name in queries:
+                with open(f'queries/queries_bq/{query_name}.sql', 'r') as file:
+                    query_str = file.read()
+                queries_strings.append(query_str)
 
-
-
+            self.df = BQ.run_query(queries_strings[0])
+            self.df_fin_grid = BQ.run_query(queries_strings[1])
+            self.df_vol_zones_a = BQ.run_query(queries_strings[2])
+            self.df_vol_zones_b = BQ.run_query(queries_strings[3])
 
     def calc_final_price(self):
         self.df['min_price'] = self.df[MEDIANS].min(axis=1)
@@ -136,13 +147,13 @@ class ModelModOne:
 
     def calc_plxb_prices(self):
         cols = ['price_zone_1a', 'price_zone_2a', 'price_zone_3a', 'price_zone_4a', 'price_zone_5a']
-        self.df6 = pd.merge(left=self.df6[['product_id_plxb', 'brand_id', 'final_grid']],
-                            right=self.df[['product_id'] + [col for col in cols]],
-                            how='left', left_on='brand_id', right_on='product_id')
+        self.df_fin_grid = pd.merge(left=self.df_fin_grid[['product_id_plxb', 'brand_id', 'final_grid']],
+                                    right=self.df[['product_id'] + [col for col in cols]],
+                                    how='left', left_on='brand_id', right_on='product_id')
         for col in cols:
-            self.df6[f'{col}_plxb'] = self.df6[col] * self.df6['final_grid']
-            self.df6[f'{col}_plxb'] = [calc_price2(x) for x in self.df6[f'{col}_plxb']]
-        self.df = pd.merge(left=self.df, right=self.df6[['product_id_plxb'] + [f'{col}_plxb' for col in cols]],
+            self.df_fin_grid[f'{col}_plxb'] = self.df_fin_grid[col] * self.df_fin_grid['final_grid']
+            self.df_fin_grid[f'{col}_plxb'] = [calc_price2(x) for x in self.df_fin_grid[f'{col}_plxb']]
+        self.df = pd.merge(left=self.df, right=self.df_fin_grid[['product_id_plxb'] + [f'{col}_plxb' for col in cols]],
                            how='left', left_on='product_id', right_on='product_id_plxb')
         for col in cols:
             self.df[col] = np.where(self.df['final_role'] == 'PLxB', self.df[f'{col}_plxb'], self.df[col])
@@ -161,7 +172,10 @@ class ModelModOne:
         self.df[f'vol_all_zones_{v}'] = 0
         for zone in zones:
             self.df[f'vol_all_zones_{v}'] = self.df[f'vol_all_zones_{v}'] + self.df[f'vol_zone_{zone}{v}'].fillna(0)
+            self.df[f'vol_zone_{zone}{v}'] = self.df[f'vol_zone_{zone}{v}'].fillna(0).astype(float)
+            self.df[f'price_zone_{zone}{v}'] = self.df[f'price_zone_{zone}{v}'].fillna(0).astype(float)
             self.df[f'sales_zone_{zone}{v}'] = self.df[f'vol_zone_{zone}{v}'] * self.df[f'price_zone_{zone}{v}']
+
         self.df[f'sales_all_zones_{v}'] = 0
         for zone in zones:
             self.df[f'sales_all_zones_{v}'] = (self.df[f'sales_all_zones_{v}'] + self.df[f'sales_zone_{zone}{v}'].fillna(0))
@@ -175,7 +189,8 @@ class ModelModOne:
         if v == 'a':
             for col in all_cols:
                 self.df[col] = np.where(self.df['has_price_zone_1a'] == 'Yes', self.df[col], np.nan)
-
+        self.df['margin'] = self.df['margin'].fillna(0).astype(float)
+        self.df['price_gross'] = self.df['price_gross'].fillna(0).astype(float)
         print(f'Model calculated for version {v}')
 
     def create_results(self):
@@ -184,15 +199,17 @@ class ModelModOne:
             file_name = f"outputs/results_{datetime.now().strftime('%Y%m%d%H%M')}.csv"
             self.df.to_csv(file_name, encoding='utf-8-sig')
             print(f'File saved')
+        elif self.src == 'GCP':
+            BQ.load_table_from_df(table=f'{PROJECT_ROOT}results', df=self.df, disposition='WRITE_TRUNCATE')
 
 
 t0 = datetime.now()
-model_mod_one = ModelModOne('SQLite')
-model_mod_one.calc_final_price()
-model_mod_one.calc_price_zone_1()
-model_mod_one.calc_zones_prices()
-model_mod_one.calc_plxb_prices()
-model_mod_one.calc_model_zones(zones=ZONES_A, v='a')
-model_mod_one.calc_model_zones(zones=ZONES_B, v='b')
-model_mod_one.create_results()
+model_results = ModelResults('SQLite')
+model_results.calc_final_price()
+model_results.calc_price_zone_1()
+model_results.calc_zones_prices()
+model_results.calc_plxb_prices()
+model_results.calc_model_zones(zones=ZONES_A, v='a')
+model_results.calc_model_zones(zones=ZONES_B, v='b')
+model_results.create_results()
 print(f'All model calculated in : {datetime.now() - t0}')

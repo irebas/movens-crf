@@ -1,6 +1,6 @@
 from main import insert_inputs, save_model_as_csv
 from elast_vol import calc_elast_vol
-from elast import calc_elasticity
+from model_elast import calc_elasticity
 
 
 def main():

@@ -1,0 +1,1 @@
+SELECT * FROM `pric-labo.pricing_app.input_final_grid`
